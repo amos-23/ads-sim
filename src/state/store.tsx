@@ -3,7 +3,7 @@ import type { Account, Campaign, PlatformId, Status } from '../types';
 import { advanceDays } from '../sim/engine';
 import { newAccount } from '../sim/factory';
 import { scenarioById } from '../data/scenarios';
-import { apiLoad, apiSave, apiSignIn, apiSignOut, getToken, setToken, SignedOut, track, type Accounts } from '../api';
+import { apiLoad, apiSave, apiSignIn, apiSignOut, apiSignUp, getToken, setToken, SignedOut, track, type Accounts } from '../api';
 
 const GUEST_KEY = 'ads-sim:v1';
 const PROFILE_KEY = 'ads-sim:profile';
@@ -30,8 +30,8 @@ interface Store {
   profile: Profile | null;
   /** Whether this browser's progress is being saved to the backend. */
   sync: SyncStatus;
-  /** Sign up / log in with just an email — no verification. Guest progress carries over to a new profile. */
-  signIn: (email: string, name?: string) => Promise<void>;
+  /** Sign up or sign in with an email and password. Resolves to an error message, or null on success. Guest progress carries over to a new account. */
+  signIn: (mode: 'signup' | 'signin', email: string, password: string, name?: string) => Promise<string | null>;
   signOut: () => void;
   createAccount: (p: PlatformId, scenarioId: string, name?: string) => void;
   resetAccount: (p: PlatformId) => void;
@@ -64,8 +64,9 @@ function loadProfile(): Profile | null {
 }
 
 export function StoreProvider({ children }: { children: ReactNode }) {
-  const [profile, setProfile] = useState<Profile | null>(loadProfile);
-  const [accounts, setAccounts] = useState<Accounts>(() => loadAccounts(keyFor(loadProfile())) ?? {});
+  // A profile is only real while this device holds a session token (older versions kept an email with no password).
+  const [profile, setProfile] = useState<Profile | null>(() => (getToken() ? loadProfile() : null));
+  const [accounts, setAccounts] = useState<Accounts>(() => loadAccounts(keyFor(getToken() ? loadProfile() : null)) ?? {});
 
   const [sync, setSync] = useState<SyncStatus>(() => (getToken() ? 'saved' : 'off'));
   const lastSent = useRef<string>('');
@@ -132,27 +133,25 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     profile,
     update,
     sync,
-    signIn: async (email, name) => {
-      const next: Profile = { email: email.trim().toLowerCase(), name: name?.trim() || undefined };
-      // Returning email → restore their saved progress. New email → keep what you've already built as a guest.
-      const local = loadAccounts(keyFor(next)) ?? accounts;
-      setProfile(next);
-      setAccounts(local);
+    signIn: async (mode, email, password, name) => {
+      const address = email.trim().toLowerCase();
       try {
-        // The backend answers with this email's saved progress. If it has none yet, it keeps what we send as the start.
-        const r = await apiSignIn(next.email, next.name, local);
+        const r = mode === 'signup'
+          ? await apiSignUp(address, password, name?.trim() || undefined, accounts)
+          : await apiSignIn(address, password);
         setToken(r.token);
+        setProfile({ email: r.user.email, name: r.user.name ?? (name?.trim() || undefined) });
         if (r.progress) {
+          // Their saved progress replaces what this browser had.
           lastSent.current = JSON.stringify(r.progress.state);
           lsSet(SYNCED_KEY, r.progress.updatedAt);
           setAccounts(r.progress.state);
         }
-        setProfile({ email: r.user.email, name: r.user.name ?? next.name });
         setSync('saved');
-        track(r.adopted ? 'signup' : 'signin');
-      } catch {
-        setToken(null);
-        setSync('off'); // backend unreachable: keep working from this browser's copy
+        track(mode);
+        return null;
+      } catch (e) {
+        return !(e instanceof Error) || e instanceof TypeError ? 'Can’t reach the server right now. Try again in a moment.' : e.message;
       }
     },
     signOut: () => {

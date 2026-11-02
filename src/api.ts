@@ -23,13 +23,19 @@ async function call(path: string, init: RequestInit & { token?: string | null } 
     ...rest,
     headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
   });
-  if (res.status === 401) throw new SignedOut();
+  // A 401 on a request that carried a token means the session ended; on sign-in it just means a wrong password.
+  if (res.status === 401 && token) throw new SignedOut();
   if (!res.ok) throw new Error(((await res.json().catch(() => null)) as { error?: string } | null)?.error ?? `Request failed (${res.status})`);
   return res.status === 204 ? null : res.json();
 }
 
-export const apiSignIn = (email: string, name: string | undefined, state: Accounts) =>
-  call('/api/ads/signin', { method: 'POST', body: JSON.stringify({ email, name, state }) }) as Promise<{ token: string; user: ServerUser; progress: Progress | null; adopted: boolean }>;
+type AuthResult = { token: string; user: ServerUser; progress: Progress | null; adopted?: boolean };
+
+export const apiSignIn = (email: string, password: string) =>
+  call('/api/ads/signin', { method: 'POST', body: JSON.stringify({ email, password }) }) as Promise<AuthResult>;
+
+export const apiSignUp = (email: string, password: string, name: string | undefined, state: Accounts) =>
+  call('/api/ads/signup', { method: 'POST', body: JSON.stringify({ email, password, name, state }) }) as Promise<AuthResult>;
 
 export const apiLoad = (token: string) => call('/api/ads/progress', { token }) as Promise<{ user: ServerUser; progress: Progress | null }>;
 

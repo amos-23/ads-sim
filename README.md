@@ -12,7 +12,7 @@ AdsSim is an ad-buying "flight simulator". You pick an ad platform and build cam
 
 **No sign-up or business choice is required.** Picking a platform drops you straight into a free-play account for your own business. Two optional extras:
 
-- **Sign up with email** (home page, top right). Email only, no password, no verification. It saves your progress under that email and carries over anything you built as a guest. Returning with the same email restores it. Progress is saved to the AdsSim backend under that email (and cached in this browser's `localStorage`), so entering the same email on another device restores it. Only your email, optional name and simulator progress are stored; there is no verification, so anyone who types an email can load that email's practice campaigns. Without signing up, everything stays in this browser.
+- **Sign up / Sign in** (home page, top right). Email and password (8+ characters). It saves your progress to the AdsSim backend and carries over anything you built as a guest. Sign in on any device to get it back. There is no email verification and no password reset yet. Without an account, everything stays in this browser's `localStorage`.
 
 **Usage analytics.** AdsSim sends anonymous events (platform started, campaign saved, days advanced, sign-ups) to the backend. No cookies, no email, and nothing is sent when the browser has Do Not Track on.
 - **Guided sample businesses** (Brief panel → *Try a guided sample business*). Four preset briefs with their own audience, economics and target cost per result.
@@ -55,7 +55,7 @@ npm run build     # type-check and build a static site into dist/
 npm test          # engine tests (vitest)
 ```
 
-The build is fully static (`base: './'`), so `dist/` can be hosted on GitHub Pages, Netlify, Vercel or any file host. Progress is saved in the browser's `localStorage`. To start over, use **Brief → Reset account** in the simulation dock.
+The build is fully static (`base: './'`), so `dist/` can be hosted on GitHub Pages, Netlify, Vercel or any file host. Guest progress is saved in the browser's `localStorage`; accounts also save to the backend. To start over, use **Brief → Reset account** in the simulation dock.
 
 ## Project layout
 
