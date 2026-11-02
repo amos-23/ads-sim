@@ -32,6 +32,8 @@ export interface Scenario {
   ctrMult: number;
   cvrMult: number;
   tips: string[];
+  /** Free play: the user's own business, no preset brief. */
+  open?: boolean;
 }
 
 export const SCENARIOS: Scenario[] = [
@@ -174,7 +176,37 @@ export const SCENARIOS: Scenario[] = [
   },
 ];
 
-export const scenarioById = (id: string) => SCENARIOS.find((s) => s.id === id) ?? SCENARIOS[0];
+/** Default for everyone: advertise your own business, no preset economics or audience. */
+export const OPEN_SCENARIO: Scenario = {
+  id: 'open',
+  open: true,
+  brand: 'My Business',
+  emoji: '🏢',
+  industry: 'Your own business',
+  pitch: 'Free play — advertise anything you like. Results are simulated with typical, neutral market economics.',
+  goal: 'sales',
+  goalLabel: 'Sales or leads',
+  hasApp: true,
+  value: 50,
+  targetCpa: 25,
+  suggestedDailyBudget: 50,
+  url: 'https://yourbusiness.example',
+  idealAge: [18, 65],
+  idealGender: 'all',
+  idealInterests: [],
+  relevantTerms: [],
+  keywords: [],
+  chatTopics: [],
+  cpmMult: 1,
+  ctrMult: 1,
+  cvrMult: 1,
+  tips: [
+    'Match the objective to the outcome you want: Sales/Conversions for purchases, Leads for sign-ups, Awareness only for reach.',
+    'Test two or three different creatives in one ad set, then pause the weakest after a few days.',
+  ],
+};
+
+export const scenarioById = (id: string) => (id === 'open' ? OPEN_SCENARIO : SCENARIOS.find((s) => s.id === id) ?? OPEN_SCENARIO);
 
 export const ALL_INTERESTS = [
   'Coffee', 'Espresso', 'Cafés', 'Cooking', 'Specialty food', 'Subscription boxes',

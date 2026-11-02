@@ -47,6 +47,20 @@ describe('engine', () => {
       expect(st.spend).toBeLessThanOrEqual(50 * 14 * 1.16);
     });
   }
+  for (const [p, o, t] of [['meta', 'sales'], ['tiktok', 'sales'], ['google', 'sales', 'search'], ['x', 'conversions'], ['chatgpt', 'conversions']] as [PlatformId, string, string?][]) {
+    it(`free play (no sample business) delivers on ${p}`, () => {
+      const open = scenarioById('open');
+      expect(open.open).toBe(true);
+      const acc = setup(p, o, true, t);
+      acc.scenarioId = 'open';
+      const st = sumStats(advanceDays(acc, 10), adIds(acc.campaigns[0]));
+      expect(st.spend).toBeGreaterThan(100);
+      expect(st.clicks).toBeGreaterThan(0);
+    });
+  }
+  it('unknown scenario ids fall back to free play', () => {
+    expect(scenarioById('does-not-exist').open).toBe(true);
+  });
   it('rejects policy-violating ads', () => {
     const acc = setup('meta', 'sales');
     acc.campaigns[0].adSets[0].ads[0].creative.primaryText = 'Guaranteed results or your money back';

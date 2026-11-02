@@ -89,17 +89,17 @@ export function newCampaign(platform: PlatformId, s: Scenario, objectiveId: stri
   return c;
 }
 
-export function newAccount(platform: PlatformId, s: Scenario): Account {
+export function newAccount(platform: PlatformId, s: Scenario, name?: string): Account {
   return {
     platform,
     scenarioId: s.id,
-    accountName: s.brand,
+    accountName: name || s.brand,
     day: 0,
     startDate: new Date().toISOString().slice(0, 10),
     balance: 5000,
     campaigns: [],
     stats: {},
-    notices: [{ id: uid('n'), day: 0, kind: 'info', text: `Welcome! Your practice account for ${s.brand} has $5,000 in simulated credit.` }],
+    notices: [{ id: uid('n'), day: 0, kind: 'info', text: s.open ? 'Welcome! Your practice account has $5,000 in simulated credit. Build a campaign for any business you like.' : `Welcome! Your practice account for ${s.brand} has $5,000 in simulated credit.` }],
   };
 }
 

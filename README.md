@@ -1,6 +1,6 @@
 # AdsSim — practise running ads without spending money
 
-AdsSim is an ad-buying "flight simulator". You pick an ad platform, pick a practice business, and build campaigns in an interface that looks and works like that platform's real ads tool. Then you fast-forward time and see what your choices lead to.
+AdsSim is an ad-buying "flight simulator". You pick an ad platform and build campaigns in an interface that looks and works like that platform's real ads tool. Then you fast-forward time and see what your choices lead to.
 
 | Platform | What you practise |
 | --- | --- |
@@ -9,6 +9,11 @@ AdsSim is an ad-buying "flight simulator". You pick an ad platform, pick a pract
 | **Google Ads** | Objective → campaign type (Search, PMax, Display, Video, Demand Gen), stepper flow, keyword match types (`kw`, `"kw"`, `[kw]`), Keyword Planner ideas, responsive search ads with **Ad strength**, **Quality Score**, Limited by budget, Keywords tab |
 | **X Ads** | Objectives, ad groups, Autobid / Target cost / Max bid, keyword targeting, promoted post with website card preview |
 | **ChatGPT Ads** | Contextual targeting by conversation topic, restricted topics (health, politics), 18+ only, sponsored card shown under an answer |
+
+**No sign-up or business choice is required.** Picking a platform drops you straight into a free-play account for your own business. Two optional extras:
+
+- **Sign up with email** (home page, top right). Email only, no password, no verification. It saves your progress under that email and carries over anything you built as a guest. Returning with the same email restores it. Everything lives in this browser's `localStorage`; there is no server, so nothing syncs across devices and no emails are collected anywhere.
+- **Guided sample businesses** (Brief panel → *Try a guided sample business*). Four preset briefs with their own audience, economics and target cost per result.
 
 > AdsSim is an independent educational tool. It is not affiliated with Meta, TikTok, Google, X or OpenAI. All numbers are simulated.
 

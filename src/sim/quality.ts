@@ -21,6 +21,7 @@ export interface QualityResult {
 const words = (s: string) => s.toLowerCase().match(/[a-z0-9%$]+/g) ?? [];
 
 export function relevance(text: string, scenario: Scenario): number {
+  if (scenario.open) return text.trim() ? 0.8 : 0;
   const t = text.toLowerCase();
   const hits = scenario.relevantTerms.filter((term) => t.includes(term)).length;
   return clamp(hits / 3, 0, 1);
@@ -171,7 +172,7 @@ export function audienceInfo(platform: PlatformId, scenario: Scenario, t: Target
     notes.push('Gender targeting excludes most of the likely buyers.');
   }
   if (t.interests.length) {
-    const match = t.interests.filter((i) => scenario.idealInterests.includes(i)).length;
+    const match = t.interests.filter((i) => scenario.open || scenario.idealInterests.includes(i)).length;
     const r = match / t.interests.length;
     fit *= 0.75 + 0.45 * r;
     if (r < 0.5) notes.push('Several selected interests are unrelated to the product.');
@@ -186,7 +187,7 @@ export function audienceInfo(platform: PlatformId, scenario: Scenario, t: Target
   if (platform === 'chatgpt') {
     // Size is driven by relevant daily conversations rather than demographics.
     const topics = t.topics.filter((tp) => !RESTRICTED_TOPICS.includes(tp));
-    const rel = topics.filter((tp) => scenario.chatTopics.includes(tp)).length;
+    const rel = topics.filter((tp) => scenario.open || scenario.chatTopics.includes(tp)).length;
     size = pop * 0.012 * (topics.length || 0.5) * (t.expansion ? 1.6 : 1) * ageFrac;
     fit = topics.length ? (0.6 + 0.55 * (rel / topics.length)) * (0.75 + 0.25 * ageFit) : 0.55;
     if (topics.length && rel === 0) notes.push('None of the selected topics are conversations your customers have.');

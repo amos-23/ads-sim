@@ -4,13 +4,27 @@ import { advanceDays } from '../sim/engine';
 import { newAccount } from '../sim/factory';
 import { scenarioById } from '../data/scenarios';
 
-const KEY = 'ads-sim:v1';
+const GUEST_KEY = 'ads-sim:v1';
+const PROFILE_KEY = 'ads-sim:profile';
 
 type Accounts = Partial<Record<PlatformId, Account>>;
 
+/** Optional, unverified identity. Stored only in this browser. */
+export interface Profile {
+  email: string;
+  name?: string;
+}
+
+export const isEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.trim());
+const keyFor = (p: Profile | null) => (p ? `ads-sim:v1:user:${p.email.toLowerCase()}` : GUEST_KEY);
+
 interface Store {
   accounts: Accounts;
-  createAccount: (p: PlatformId, scenarioId: string) => void;
+  profile: Profile | null;
+  /** Sign up / log in with just an email — no verification. Guest progress carries over to a new profile. */
+  signIn: (email: string, name?: string) => void;
+  signOut: () => void;
+  createAccount: (p: PlatformId, scenarioId: string, name?: string) => void;
   resetAccount: (p: PlatformId) => void;
   update: (p: PlatformId, fn: (a: Account) => Account) => void;
   saveCampaign: (p: PlatformId, c: Campaign) => void;
@@ -21,25 +35,38 @@ interface Store {
 
 const Ctx = createContext<Store | null>(null);
 
-function load(): Accounts {
+function loadAccounts(key: string): Accounts | null {
   try {
-    const raw = localStorage.getItem(KEY);
-    return raw ? JSON.parse(raw) : {};
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : null;
   } catch {
-    return {};
+    return null;
+  }
+}
+
+function loadProfile(): Profile | null {
+  try {
+    const raw = localStorage.getItem(PROFILE_KEY);
+    const p = raw ? JSON.parse(raw) : null;
+    return p && typeof p.email === 'string' ? p : null;
+  } catch {
+    return null;
   }
 }
 
 export function StoreProvider({ children }: { children: ReactNode }) {
-  const [accounts, setAccounts] = useState<Accounts>(load);
+  const [profile, setProfile] = useState<Profile | null>(loadProfile);
+  const [accounts, setAccounts] = useState<Accounts>(() => loadAccounts(keyFor(loadProfile())) ?? {});
 
   useEffect(() => {
     try {
-      localStorage.setItem(KEY, JSON.stringify(accounts));
+      localStorage.setItem(keyFor(profile), JSON.stringify(accounts));
+      if (profile) localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+      else localStorage.removeItem(PROFILE_KEY);
     } catch {
       /* storage full or blocked — the session still works in memory */
     }
-  }, [accounts]);
+  }, [accounts, profile]);
 
   const update = useCallback((p: PlatformId, fn: (a: Account) => Account) => {
     setAccounts((all) => (all[p] ? { ...all, [p]: fn(all[p]!) } : all));
@@ -47,8 +74,20 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const store = useMemo<Store>(() => ({
     accounts,
+    profile,
     update,
-    createAccount: (p, id) => setAccounts((all) => ({ ...all, [p]: newAccount(p, scenarioById(id)) })),
+    signIn: (email, name) => {
+      const next: Profile = { email: email.trim().toLowerCase(), name: name?.trim() || undefined };
+      // Returning email → restore their saved progress. New email → keep what you've already built as a guest.
+      const existing = loadAccounts(keyFor(next));
+      setProfile(next);
+      setAccounts(existing ?? accounts);
+    },
+    signOut: () => {
+      setProfile(null);
+      setAccounts(loadAccounts(GUEST_KEY) ?? {});
+    },
+    createAccount: (p, id, name) => setAccounts((all) => ({ ...all, [p]: newAccount(p, scenarioById(id), name) })),
     resetAccount: (p) => setAccounts((all) => {
       const next = { ...all };
       delete next[p];
@@ -77,7 +116,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         .map((c) => ({ ...c, adSets: c.adSets.filter((s) => !ids.includes(s.id)).map((s) => ({ ...s, ads: s.ads.filter((ad) => !ids.includes(ad.id)) })) })),
     })),
     advance: (p, days) => update(p, (a) => advanceDays(a, days)),
-  }), [accounts, update]);
+  }), [accounts, profile, update]);
 
   return <Ctx.Provider value={store}>{children}</Ctx.Provider>;
 }

@@ -129,7 +129,7 @@ export function GooglePreview({ c, s, campaign, keywords }: { c: Creative; s: Sc
   const hs = c.headlines.filter(Boolean);
   const ds = c.descriptions.filter(Boolean);
   const path = [domainOf(c.url), ...c.displayPath.filter(Boolean)].join(' › ');
-  const q = keywords?.[0]?.text || s.keywords[0].text;
+  const q = keywords?.[0]?.text || s.keywords[0]?.text || 'your keyword';
   if (type === 'search' || type === 'pmax') {
     return (
       <div className="pv pv-google">
@@ -222,6 +222,7 @@ export function XPreview({ c, s }: { c: Creative; s: Scenario }) {
 /* -------------------------------- ChatGPT -------------------------------- */
 
 const CHAT_SAMPLES: Record<string, [string, string]> = {
+  open: ['What should I look for when choosing a provider for this?', 'Compare reviews, pricing and what’s included, and start with a trial or a small order before committing. Clear return and support policies are a good sign.'],
   brewly: ['What’s the best way to get fresh coffee beans delivered?', 'Freshness matters most: look for roasters that print a roast date and ship within a few days of roasting. Whole beans stay fresh for 2–4 weeks once opened — grind just before brewing. Subscriptions are handy because they time deliveries to how much you drink.'],
   fitpulse: ['Can you suggest a quick workout I can do at home with no equipment?', 'Here’s a 20-minute circuit: 3 rounds of 45s squats, 45s push-ups, 45s lunges, 45s plank and 60s rest. Consistency beats intensity — 3–4 short sessions a week is a great start. Apps can help by adapting the plan as you progress.'],
   nova: ['How should I add vitamin C serum to my skincare routine?', 'Apply vitamin C in the morning after cleansing and before moisturiser and sunscreen. Start with 10–15% concentration, a few times a week, and patch-test first. Store it away from light and heat so it doesn’t oxidise.'],
@@ -229,7 +230,7 @@ const CHAT_SAMPLES: Record<string, [string, string]> = {
 };
 
 export function ChatGPTPreview({ c, s }: { c: Creative; s: Scenario }) {
-  const [q, a] = CHAT_SAMPLES[s.id] ?? CHAT_SAMPLES.brewly;
+  const [q, a] = CHAT_SAMPLES[s.id] ?? CHAT_SAMPLES.open;
   return (
     <div className="pv pv-chatgpt">
       <div className="cg-window">

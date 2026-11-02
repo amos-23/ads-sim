@@ -16,6 +16,7 @@ const MODES: Record<ObjectiveKind, { cpm: number; ctr: number; cvr: number; view
 
 /** How well the campaign objective matches what the business actually needs. */
 export function goalFit(kind: ObjectiveKind, s: Scenario): number {
+  if (s.open) return 1;
   if (kind === 'app') return s.hasApp ? 1 : 0.15;
   if (s.goal === 'sales') return kind === 'leads' ? 0.45 : 1;
   return kind === 'sales' ? 0.9 : 1;
@@ -158,6 +159,13 @@ const LOW_INTENT = ['free', 'template', 'diy', 'jobs', 'job', 'salary', 'cheap',
 export function lookupKeyword(text: string, s: Scenario) {
   const t = text.toLowerCase().trim();
   const toks = t.split(/\s+/).filter(Boolean);
+  if (s.open) {
+    // No preset market: longer, more specific phrases are rarer, pricier and better-qualified.
+    const n = Math.max(1, toks.length);
+    const lowIntent = LOW_INTENT.some((w) => t.includes(w));
+    const rel = (n === 1 ? 0.45 : 0.75) * (lowIntent ? 0.35 : 1);
+    return { volume: clamp(5000 / Math.pow(n, 1.7), 60, 5000), cpc: n === 1 ? 0.9 : 1.4, rel: clamp(rel, 0.03, 1), lowIntent };
+  }
   let best = { volume: 25, cpc: 0.8, overlap: 0 };
   for (const k of s.keywords) {
     const kt = k.text.split(' ');

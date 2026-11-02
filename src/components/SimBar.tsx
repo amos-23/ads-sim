@@ -76,13 +76,19 @@ function Brief({ account }: { account: Account }) {
   const st = sumStats(account, account.campaigns.flatMap((c) => adIds(c)));
   const cpa = st.conversions ? st.spend / st.conversions : 0;
   const score = st.conversions === 0 ? 0 : Math.max(0, Math.min(100, Math.round(100 * (s.targetCpa / cpa) * Math.min(1, st.conversions / 30))));
+  const profile = store.profile;
+  const go = () => {
+    if (account.campaigns.length && !confirm('Starting a sample business replaces your current practice account. Continue?')) return;
+    window.location.hash = `/${account.platform}/pick`;
+  };
   return (
     <div className="brief">
+      <div className="brief-user muted small">{profile ? <>Signed in as <b>{profile.email}</b> · <button className="link" onClick={store.signOut}>Sign out</button></> : 'Playing as guest · progress is saved in this browser. You can sign up from the home page.'}</div>
       <div className="brief-brand"><span>{s.emoji}</span><div><b>{s.brand}</b><small>{s.industry}</small></div></div>
       <p>{s.pitch}</p>
       <dl>
-        <dt>Your goal</dt><dd>{s.goalLabel}</dd>
-        <dt>Target cost per {s.goal === 'sales' ? 'purchase' : 'lead'}</dt><dd>{fmtMoney(s.targetCpa)}</dd>
+        <dt>{s.open ? 'Mode' : 'Your goal'}</dt><dd>{s.open ? 'Free play' : s.goalLabel}</dd>
+        <dt>{s.open ? 'Benchmark' : 'Target'} cost per {s.goal === 'sales' ? 'purchase' : 'lead'}</dt><dd>{fmtMoney(s.targetCpa)}</dd>
         <dt>{s.goal === 'sales' ? 'Average order value' : 'Value per lead'}</dt><dd>{fmtMoney(s.value)}</dd>
         <dt>Landing page</dt><dd className="mono">{s.url}</dd>
       </dl>
@@ -94,6 +100,7 @@ function Brief({ account }: { account: Account }) {
       </div>
       <p className="muted small">Score rewards hitting your target CPA with enough volume (30+ results).</p>
       <p className="muted small">Balance: {fmtMoney(account.balance)} simulated credit.</p>
+      {s.open && <button className="btn" onClick={go}>Try a guided sample business</button>}
       <button className="btn danger-outline" onClick={() => { if (confirm(`Reset your ${p.name} practice account? All campaigns and results will be deleted.`)) store.resetAccount(account.platform); }}>Reset {p.name} account</button>
     </div>
   );

@@ -195,7 +195,7 @@ export function Manager({ account, onCreate, onEdit }: Props) {
               {visible.length === 0 && (
                 <tr><td colSpan={cols.length + 3} className="empty">
                   {account.campaigns.length === 0
-                    ? <div className="empty-state"><div className="empty-art">{s.emoji}</div><b>You don’t have any {p.levels.campaigns.toLowerCase()} yet</b><p className="muted">Create your first campaign to start reaching people for {s.brand.replace(/\.$/, '')}.</p>{createBtn}</div>
+                    ? <div className="empty-state"><div className="empty-art">{s.emoji}</div><b>You don’t have any {p.levels.campaigns.toLowerCase()} yet</b><p className="muted">Create your first campaign to start reaching people for {s.open ? 'your business' : s.brand.replace(/\.$/, '')}.</p>{createBtn}</div>
                     : 'No results match your filters.'}
                 </td></tr>
               )}

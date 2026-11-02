@@ -5,13 +5,13 @@ import type { PlatformId } from '../types';
 import { PlatformMark } from './ui';
 import { fmtMoney } from '../sim/metrics';
 
-export function ScenarioPicker({ platform, onStart, onBack }: { platform: PlatformId; onStart: (scenarioId: string) => void; onBack: () => void }) {
+export function ScenarioPicker({ platform, replacing, onStart, onBack }: { platform: PlatformId; replacing?: boolean; onStart: (scenarioId: string) => void; onBack: () => void }) {
   const p = PLATFORMS[platform];
   const [sel, setSel] = useState(SCENARIOS[0].id);
   return (
     <div className={`scenario-pick sp-${platform}`}>
-      <button className="link back" onClick={onBack}>← All platforms</button>
-      <div className="sp-head"><PlatformMark id={platform} size={48} /><div><h1>Set up your {p.name} practice account</h1><p className="muted">Pick the business you’ll be advertising. Each brief has its own audience, economics and target cost per result.</p></div></div>
+      <button className="link back" onClick={onBack}>← {replacing ? 'Back to my account' : 'All platforms'}</button>
+      <div className="sp-head"><PlatformMark id={platform} size={48} /><div><h1>Try a guided {p.name} challenge</h1><p className="muted">Optional: pick a sample business with its own audience, economics and target cost per result.{replacing ? ' This replaces your current practice account.' : ''}</p></div></div>
       <div className="sp-grid">
         {SCENARIOS.map((s) => (
           <button key={s.id} className={`sp-card ${sel === s.id ? 'on' : ''}`} onClick={() => setSel(s.id)}>
@@ -29,7 +29,8 @@ export function ScenarioPicker({ platform, onStart, onBack }: { platform: Platfo
       </div>
       <div className="sp-foot">
         <span className="muted">You’ll get $5,000 of simulated ad credit.</span>
-        <button className="btn primary big" onClick={() => onStart(sel)}>Open {p.productName} →</button>
+        <button className="btn" onClick={onBack}>Cancel</button>
+        <button className="btn primary big" onClick={() => onStart(sel)}>Start challenge →</button>
       </div>
     </div>
   );

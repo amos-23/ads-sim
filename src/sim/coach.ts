@@ -18,7 +18,7 @@ export function coach(acc: Account): Insight[] {
   const p = PLATFORMS[acc.platform];
   const out: Insight[] = [];
   if (!acc.campaigns.length) {
-    out.push({ severity: 'tip', title: 'Start with your first campaign', body: `Click “${p.createLabel}”. Your brief: get ${s.goalLabel.toLowerCase()} for ${s.brand} at or below ${fmtMoney(s.targetCpa)} each. Pick the objective that matches that outcome.` });
+    out.push({ severity: 'tip', title: 'Start with your first campaign', body: s.open ? `Click “${p.createLabel}” and build a campaign for your own business. Try different objectives, audiences and creative, then advance time to see how they perform.` : `Click “${p.createLabel}”. Your brief: get ${s.goalLabel.toLowerCase()} for ${s.brand} at or below ${fmtMoney(s.targetCpa)} each. Pick the objective that matches that outcome.` });
     return out;
   }
   if (acc.day === 0) out.push({ severity: 'tip', title: 'Run the clock', body: 'Use the simulation bar to advance time. Ads go through review on the first day, then begin delivering.' });
@@ -29,7 +29,7 @@ export function coach(acc: Account): Insight[] {
     const where = c.name;
     const fit = goalFit(obj.kind, s);
     if (fit < 0.6) out.push({ severity: 'bad', where, title: 'Objective doesn’t match the business goal', body: `${s.brand} needs ${s.goalLabel.toLowerCase()}, but this campaign uses “${obj.label}”. The algorithm optimises for what you ask for — choose a ${s.goal === 'sales' ? 'Sales / Conversions' : 'Leads'} objective.` });
-    if (['awareness', 'views', 'engagement'].includes(obj.kind)) out.push({ severity: 'tip', where, title: `${obj.label} campaigns won’t optimise for ${s.goalLabel.toLowerCase()}`, body: 'Upper-funnel objectives buy cheap impressions from people unlikely to convert. Great for awareness, but judge them on reach/CPM, not CPA.' });
+    if (['awareness', 'views', 'engagement'].includes(obj.kind)) out.push({ severity: 'tip', where, title: `${obj.label} campaigns won’t optimise for ${s.open ? 'sales or leads' : s.goalLabel.toLowerCase()}`, body: 'Upper-funnel objectives buy cheap impressions from people unlikely to convert. Great for awareness, but judge them on reach/CPM, not CPA.' });
 
     const st = sumStats(acc, adIds(c));
     const recent = sumStats(acc, adIds(c), acc.day - 3, acc.day - 1);

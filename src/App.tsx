@@ -37,6 +37,7 @@ function PlatformApp({ platform, view, arg }: { platform: PlatformId; view: stri
   const account = store.accounts[platform];
   const p = PLATFORMS[platform];
   const [draft, setDraft] = useState<{ c: Campaign; isNew: boolean; focus?: Focus } | null>(null);
+  const needsAccount = !account && view !== 'pick';
 
   useEffect(() => {
     document.title = `${p.productName} · ${p.name} — AdsSim`;
@@ -44,7 +45,15 @@ function PlatformApp({ platform, view, arg }: { platform: PlatformId; view: stri
     return () => { delete document.body.dataset.platform; };
   }, [platform, p]);
 
-  if (!account) return <ScenarioPicker platform={platform} onBack={() => navigate('/')} onStart={(id) => store.createAccount(platform, id)} />;
+  // No business needs to be chosen: first visit drops you straight into a free-play account.
+  useEffect(() => {
+    if (needsAccount) store.createAccount(platform, 'open', store.profile?.name || store.profile?.email.split('@')[0] || 'My Ad Account');
+  }, [needsAccount, platform, store]);
+
+  if (view === 'pick') {
+    return <ScenarioPicker platform={platform} replacing={!!account} onBack={() => navigate(account ? `/${platform}` : '/')} onStart={(id) => { store.createAccount(platform, id); navigate(`/${platform}`); }} />;
+  }
+  if (!account) return null;
 
   const s = scenarioById(account.scenarioId);
   const Shell = SHELLS[platform];

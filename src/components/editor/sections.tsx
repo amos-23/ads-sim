@@ -119,7 +119,7 @@ function CampaignBudget(ctx: EdCtx) {
     <Card title={p.id === 'google' ? 'Budget' : 'Campaign budget'} subtitle={p.id === 'google' ? 'Set your average daily budget for this campaign' : undefined}>
       {BudgetFields(ctx, p.id !== 'google')}
       {p.id === 'google' && <p className="muted small">For the month, you won’t pay more than your daily budget times the average number of days in a month ({fmtMoney(draft.budget * 30.4)}). Some days you might spend more or less than your daily budget.</p>}
-      <p className="muted small">Brief suggests about {fmtMoney(s.suggestedDailyBudget, 0)}/day for {s.brand}.</p>
+      {!s.open && <p className="muted small">Brief suggests about {fmtMoney(s.suggestedDailyBudget, 0)}/day for {s.brand}.</p>}
     </Card>
   );
 }
@@ -248,7 +248,7 @@ function AdSetBudget(ctx: EdCtx) {
         <Field label="Start date"><input className="input" value="Today (simulated)" readOnly /></Field>
         <Field label="End date"><input className="input" value="None — run continuously" readOnly /></Field>
       </div>
-      <p className="muted small">Brief suggests ~{fmtMoney(s.suggestedDailyBudget, 0)}/day across the whole campaign.</p>
+      {!s.open && <p className="muted small">Brief suggests ~{fmtMoney(s.suggestedDailyBudget, 0)}/day across the whole campaign.</p>}
     </Card>
   );
 }
@@ -397,6 +397,9 @@ function Keywords(ctx: EdCtx) {
         <Field label="Enter or paste keywords" help='Use match types: keyword = broad match, "keyword" = phrase match, [keyword] = exact match. One per line.' error={err(ctx, 'as.keywords', 'as')}>
           <textarea className="input mono" rows={8} value={text} placeholder={'coffee subscription\n"buy coffee beans"\n[specialty coffee]'} onChange={(e) => commit(e.target.value)} />
         </Field>
+        {s.keywords.length === 0 ? (
+          <div className="kw-ideas"><div className="kw-ideas-h">Keyword ideas</div><p className="muted small">Type the searches your customers would use. More specific phrases (3+ words) usually cost less and convert better than single words.</p></div>
+        ) : (
         <div className="kw-ideas">
           <div className="kw-ideas-h">Get keyword ideas <Info text="Simulated Keyword Planner data for the United States." /></div>
           <table className="mini">
@@ -413,6 +416,7 @@ function Keywords(ctx: EdCtx) {
             </tbody>
           </table>
         </div>
+        )}
       </div>
       {kws.length > 0 && (
         <table className="mini kw-table">

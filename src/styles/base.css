@@ -325,3 +325,17 @@ tr:hover .row-actions { visibility: visible; }
   .bill-cards { grid-template-columns: 1fr; }
   .mgr-toolbar .search { width: 100%; }
 }
+
+/* ---------- Auth / home user ---------- */
+.home-nav { gap: 20px; }
+.home-signup { background: #fff; border-color: #d6d6e7; }
+.home-user { display: flex; align-items: center; gap: 10px; font-size: 14px; }
+.home-avatar { width: 30px; height: 30px; border-radius: 50%; background: #4f46e5; color: #fff; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; }
+.home-email { max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+.hero-note { font-size: 15px !important; color: #4f46e5 !important; font-weight: 600; margin-top: 12px !important; }
+.auth-body { padding: 16px 18px 4px; display: flex; flex-direction: column; gap: 10px; }
+.auth-label { display: flex; flex-direction: column; gap: 6px; font-weight: 600; font-size: 13.5px; }
+.auth-modal .btn.primary { background: #4f46e5; border-color: #4f46e5; }
+.auth-modal .link { color: #4f46e5; }
+.brief-user { margin-bottom: 10px; padding: 8px 10px; background: #f3f4f6; border-radius: 8px; }
+.brief .btn { margin-right: 6px; }

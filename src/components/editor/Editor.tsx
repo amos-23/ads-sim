@@ -191,6 +191,16 @@ export function Editor({ account, initial, isNew, focus, onPublish, onCancel }: 
 
 function SideSummary({ ctx }: { ctx: EdCtx }) {
   const { s, p } = ctx;
+  if (s.open) {
+    return (
+      <div className="side-summary">
+        <div className="side-h">🧭 Free play</div>
+        <p>You’re advertising your own business on {p.name}. Results use typical, neutral market economics (about $50 per sale or lead).</p>
+        <div className="side-h">💡 Tips</div>
+        <ul>{s.tips.map((t) => <li key={t}>{t}</li>)}</ul>
+      </div>
+    );
+  }
   return (
     <div className="side-summary">
       <div className="side-h">📋 Your brief</div>
