@@ -12,7 +12,9 @@ AdsSim is an ad-buying "flight simulator". You pick an ad platform and build cam
 
 **No sign-up or business choice is required.** Picking a platform drops you straight into a free-play account for your own business. Two optional extras:
 
-- **Sign up with email** (home page, top right). Email only, no password, no verification. It saves your progress under that email and carries over anything you built as a guest. Returning with the same email restores it. Everything lives in this browser's `localStorage`; there is no server, so nothing syncs across devices and no emails are collected anywhere.
+- **Sign up with email** (home page, top right). Email only, no password, no verification. It saves your progress under that email and carries over anything you built as a guest. Returning with the same email restores it. Progress is saved to the AdsSim backend under that email (and cached in this browser's `localStorage`), so entering the same email on another device restores it. Only your email, optional name and simulator progress are stored; there is no verification, so anyone who types an email can load that email's practice campaigns. Without signing up, everything stays in this browser.
+
+**Usage analytics.** AdsSim sends anonymous events (platform started, campaign saved, days advanced, sign-ups) to the backend. No cookies, no email, and nothing is sent when the browser has Do Not Track on.
 - **Guided sample businesses** (Brief panel → *Try a guided sample business*). Four preset briefs with their own audience, economics and target cost per result.
 
 > AdsSim is an independent educational tool. It is not affiliated with Meta, TikTok, Google, X or OpenAI. All numbers are simulated.
@@ -73,3 +75,8 @@ src/
 
 - **Scenario:** add an entry to `SCENARIOS` in `src/data/scenarios.ts`.
 - **Platform:** add a `PlatformDef` in `src/platforms/config.ts`, a shell in `shells.tsx`, a preview in `previews.tsx` and a theme block in `src/styles/platforms.css`.
+
+
+## Backend
+
+The API lives in the events app (`moonshot` repo, routes under `/api/ads/*`, its own `ads` Postgres schema). The site finds it through `VITE_API_URL` (default `https://events.latars.xyz`; use `http://localhost:3000` when running both locally). The backend must list this site's address in its `ADS_ORIGINS` setting. If it can't be reached, AdsSim keeps working from `localStorage`.

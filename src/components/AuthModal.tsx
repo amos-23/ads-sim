@@ -7,13 +7,15 @@ export function AuthModal({ onClose }: { onClose: () => void }) {
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
   const [touched, setTouched] = useState(false);
+  const [busy, setBusy] = useState(false);
   const valid = isEmail(email);
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setTouched(true);
-    if (!valid) return;
-    store.signIn(email, name);
+    if (!valid || busy) return;
+    setBusy(true);
+    await store.signIn(email, name);
     onClose();
   };
 
@@ -30,12 +32,12 @@ export function AuthModal({ onClose }: { onClose: () => void }) {
           <label className="auth-label"><span>Name <span className="muted">(optional)</span></span>
             <input className="input" autoComplete="name" placeholder="Used as your ad account name" value={name} onChange={(e) => setName(e.target.value)} />
           </label>
-          <p className="muted small">Already signed up? Enter the same email to get your saved campaigns back. Everything is stored in this browser only, so progress won’t follow you to another device.</p>
+          <p className="muted small">Already signed up? Enter the same email on any device to get your saved campaigns back. We save your simulator progress and your email, nothing else, and there’s no verification, so only use an email you don’t mind others typing in.</p>
         </div>
         <footer className="modal-f">
           <button type="button" className="link" onClick={onClose}>Not now — continue as guest</button>
           <div className="spacer" />
-          <button type="submit" className="btn primary">Sign up</button>
+          <button type="submit" className="btn primary" disabled={busy}>{busy ? 'Saving…' : 'Sign up'}</button>
         </footer>
       </form>
     </Modal>
