@@ -1,15 +1,22 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import type { Account, Campaign, PlatformId, Status } from '../types';
 import { advanceDays } from '../sim/engine';
 import { newAccount } from '../sim/factory';
 import { scenarioById } from '../data/scenarios';
+import { apiLoad, apiSave, apiSignIn, apiSignOut, getToken, setToken, SignedOut, track, type Accounts } from '../api';
 
 const GUEST_KEY = 'ads-sim:v1';
 const PROFILE_KEY = 'ads-sim:profile';
 
-type Accounts = Partial<Record<PlatformId, Account>>;
+const SYNCED_KEY = 'ads-sim:synced';   // server time of the progress this browser last saved or received
+const CHANGED_KEY = 'ads-sim:changed'; // when this browser last changed anything
 
-/** Optional, unverified identity. Stored only in this browser. */
+const lsGet = (k: string) => { try { return localStorage.getItem(k); } catch { return null; } };
+const lsSet = (k: string, v: string) => { try { localStorage.setItem(k, v); } catch { /* blocked storage */ } };
+
+export type SyncStatus = 'off' | 'saving' | 'saved' | 'offline';
+
+/** Optional, unverified identity. Cached in this browser and saved to the AdsSim backend. */
 export interface Profile {
   email: string;
   name?: string;
@@ -21,8 +28,10 @@ const keyFor = (p: Profile | null) => (p ? `ads-sim:v1:user:${p.email.toLowerCas
 interface Store {
   accounts: Accounts;
   profile: Profile | null;
+  /** Whether this browser's progress is being saved to the backend. */
+  sync: SyncStatus;
   /** Sign up / log in with just an email — no verification. Guest progress carries over to a new profile. */
-  signIn: (email: string, name?: string) => void;
+  signIn: (email: string, name?: string) => Promise<void>;
   signOut: () => void;
   createAccount: (p: PlatformId, scenarioId: string, name?: string) => void;
   resetAccount: (p: PlatformId) => void;
@@ -58,6 +67,52 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(loadProfile);
   const [accounts, setAccounts] = useState<Accounts>(() => loadAccounts(keyFor(loadProfile())) ?? {});
 
+  const [sync, setSync] = useState<SyncStatus>(() => (getToken() ? 'saved' : 'off'));
+  const lastSent = useRef<string>('');
+
+  // Note when this browser changed something, so a stale copy on the server never overwrites newer local work.
+  const changed = useRef(false);
+  useEffect(() => {
+    if (changed.current) lsSet(CHANGED_KEY, new Date().toISOString());
+    changed.current = true;
+  }, [accounts]);
+
+  // Save to the backend a moment after the last change (only when signed in; the browser copy below is always kept).
+  useEffect(() => {
+    const token = getToken();
+    if (!token || !profile) return;
+    const timer = setTimeout(async () => {
+      const body = JSON.stringify(accounts);
+      if (body === lastSent.current) return;
+      setSync('saving');
+      try {
+        const r = await apiSave(token, accounts);
+        lastSent.current = body;
+        lsSet(SYNCED_KEY, r.updatedAt);
+        setSync('saved');
+      } catch (e) {
+        if (e instanceof SignedOut) { setToken(null); setSync('off'); } else setSync('offline');
+      }
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, [accounts, profile]);
+
+  // On load, pick up progress saved from another device, unless this browser has newer unsaved work.
+  useEffect(() => {
+    const token = getToken();
+    if (!token || !loadProfile()) return;
+    apiLoad(token).then(({ progress }) => {
+      if (!progress) return;
+      const unsaved = (lsGet(CHANGED_KEY) ?? '') > (lsGet(SYNCED_KEY) ?? '');
+      if (unsaved || progress.updatedAt <= (lsGet(SYNCED_KEY) ?? '')) return;
+      lastSent.current = JSON.stringify(progress.state);
+      lsSet(SYNCED_KEY, progress.updatedAt);
+      setAccounts(progress.state);
+    }).catch((e) => { if (e instanceof SignedOut) { setToken(null); setSync('off'); } else setSync('offline'); });
+  }, []);
+
+  useEffect(() => { track('view'); }, []);
+
   useEffect(() => {
     try {
       localStorage.setItem(keyFor(profile), JSON.stringify(accounts));
@@ -76,24 +131,52 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     accounts,
     profile,
     update,
-    signIn: (email, name) => {
+    sync,
+    signIn: async (email, name) => {
       const next: Profile = { email: email.trim().toLowerCase(), name: name?.trim() || undefined };
       // Returning email → restore their saved progress. New email → keep what you've already built as a guest.
-      const existing = loadAccounts(keyFor(next));
+      const local = loadAccounts(keyFor(next)) ?? accounts;
       setProfile(next);
-      setAccounts(existing ?? accounts);
+      setAccounts(local);
+      try {
+        // The backend answers with this email's saved progress. If it has none yet, it keeps what we send as the start.
+        const r = await apiSignIn(next.email, next.name, local);
+        setToken(r.token);
+        if (r.progress) {
+          lastSent.current = JSON.stringify(r.progress.state);
+          lsSet(SYNCED_KEY, r.progress.updatedAt);
+          setAccounts(r.progress.state);
+        }
+        setProfile({ email: r.user.email, name: r.user.name ?? next.name });
+        setSync('saved');
+        track(r.adopted ? 'signup' : 'signin');
+      } catch {
+        setToken(null);
+        setSync('off'); // backend unreachable: keep working from this browser's copy
+      }
     },
     signOut: () => {
+      const token = getToken();
+      if (token) void apiSignOut(token);
+      setToken(null);
+      setSync('off');
       setProfile(null);
       setAccounts(loadAccounts(GUEST_KEY) ?? {});
     },
-    createAccount: (p, id, name) => setAccounts((all) => ({ ...all, [p]: newAccount(p, scenarioById(id), name) })),
-    resetAccount: (p) => setAccounts((all) => {
-      const next = { ...all };
-      delete next[p];
-      return next;
-    }),
+    createAccount: (p, id, name) => {
+      track('platform_start', p, { scenario: id });
+      setAccounts((all) => ({ ...all, [p]: newAccount(p, scenarioById(id), name) }));
+    },
+    resetAccount: (p) => {
+      track('reset', p);
+      setAccounts((all) => {
+        const next = { ...all };
+        delete next[p];
+        return next;
+      });
+    },
     saveCampaign: (p, c) => update(p, (a) => {
+      track('campaign_saved', p, { objective: c.objective ?? '' });
       const exists = a.campaigns.some((x) => x.id === c.id);
       return { ...a, campaigns: exists ? a.campaigns.map((x) => (x.id === c.id ? c : x)) : [c, ...a.campaigns] };
     }),
@@ -115,8 +198,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         .filter((c) => !ids.includes(c.id))
         .map((c) => ({ ...c, adSets: c.adSets.filter((s) => !ids.includes(s.id)).map((s) => ({ ...s, ads: s.ads.filter((ad) => !ids.includes(ad.id)) })) })),
     })),
-    advance: (p, days) => update(p, (a) => advanceDays(a, days)),
-  }), [accounts, profile, update]);
+    advance: (p, days) => {
+      track('days_advanced', p, { days });
+      update(p, (a) => advanceDays(a, days));
+    },
+  }), [accounts, profile, sync, update]);
 
   return <Ctx.Provider value={store}>{children}</Ctx.Provider>;
 }

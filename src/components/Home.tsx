@@ -9,7 +9,7 @@ import { AuthModal } from './AuthModal';
 import type { PlatformId } from '../types';
 
 export function Home({ open }: { open: (p: PlatformId) => void }) {
-  const { accounts, profile, signOut } = useStore();
+  const { accounts, profile, signOut, sync } = useStore();
   const [auth, setAuth] = useState(false);
   return (
     <div className="home">
@@ -21,6 +21,9 @@ export function Home({ open }: { open: (p: PlatformId) => void }) {
           <div className="home-user">
             <span className="home-avatar">{(profile.name || profile.email)[0].toUpperCase()}</span>
             <span className="home-email">{profile.name || profile.email}</span>
+            <span className="muted small" title={sync === 'offline' ? 'Couldn’t reach the server. Your progress is kept in this browser and will sync when it can.' : undefined}>
+              {sync === 'saving' ? 'Saving…' : sync === 'saved' ? 'Saved' : sync === 'offline' ? 'Offline' : 'This browser only'}
+            </span>
             <button className="link" onClick={signOut}>Sign out</button>
           </div>
         ) : (
