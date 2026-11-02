@@ -5,12 +5,12 @@ import { scenarioById, SCENARIOS } from '../data/scenarios';
 import { adIds, sumStats } from '../sim/engine';
 import { fmtMoney } from '../sim/metrics';
 import { PlatformMark } from './ui';
-import { AuthModal } from './AuthModal';
+import { AuthModal, type AuthMode } from './AuthModal';
 import type { PlatformId } from '../types';
 
 export function Home({ open }: { open: (p: PlatformId) => void }) {
   const { accounts, profile, signOut, sync } = useStore();
-  const [auth, setAuth] = useState(false);
+  const [auth, setAuth] = useState<AuthMode | null>(null);
   return (
     <div className="home">
       <header className="home-nav">
@@ -27,10 +27,13 @@ export function Home({ open }: { open: (p: PlatformId) => void }) {
             <button className="link" onClick={signOut}>Sign out</button>
           </div>
         ) : (
-          <button className="btn home-signup" onClick={() => setAuth(true)}>Sign up</button>
+          <>
+            <button className="link" onClick={() => setAuth('signin')}>Sign in</button>
+            <button className="btn home-signup" onClick={() => setAuth('signup')}>Sign up</button>
+          </>
         )}
       </header>
-      {auth && <AuthModal onClose={() => setAuth(false)} />}
+      {auth && <AuthModal key={auth} mode={auth} onClose={() => setAuth(null)} />}
       <section className="hero">
         <div className="hero-pill">Ad-buying flight simulator</div>
         <h1>Practice running ads<br />without spending a cent.</h1>
