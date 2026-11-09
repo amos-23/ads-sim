@@ -29,6 +29,8 @@ export default function App() {
   const hash = useHash();
   const { profile } = useStore();
   const [, platform, view = 'manager', arg] = hash.split('/');
+  // The link in the password reset email: #/reset/<token>.
+  if (platform === 'reset' && view !== 'manager') return <Home open={(p) => navigate(`/${p}`)} reset={view} />;
   if (platform && platform in PLATFORMS) {
     // An account is needed to use AdsSim: without one, the home page asks you to sign up (or sign in) first,
     // then opens the platform you picked.

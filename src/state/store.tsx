@@ -3,7 +3,7 @@ import type { Account, Campaign, PlatformId, Status } from '../types';
 import { advanceDays } from '../sim/engine';
 import { newAccount } from '../sim/factory';
 import { scenarioById } from '../data/scenarios';
-import { apiLoad, apiSave, apiSignIn, apiSignOut, apiSignUp, getToken, setToken, SignedOut, track, type Accounts } from '../api';
+import { apiForgot, apiLoad, apiReset, apiSave, apiSignIn, apiSignOut, apiSignUp, getToken, setToken, SignedOut, track, type Accounts } from '../api';
 
 const GUEST_KEY = 'ads-sim:v1';
 const PROFILE_KEY = 'ads-sim:profile';
@@ -13,6 +13,8 @@ const CHANGED_KEY = 'ads-sim:changed'; // when this browser last changed anythin
 
 const lsGet = (k: string) => { try { return localStorage.getItem(k); } catch { return null; } };
 const lsSet = (k: string, v: string) => { try { localStorage.setItem(k, v); } catch { /* blocked storage */ } };
+
+const friendly = (e: unknown) => (!(e instanceof Error) || e instanceof TypeError ? 'Can’t reach the server right now. Try again in a moment.' : e.message);
 
 export type SyncStatus = 'off' | 'saving' | 'saved' | 'offline';
 
@@ -32,6 +34,10 @@ interface Store {
   sync: SyncStatus;
   /** Sign up or sign in with an email and password. Resolves to an error message, or null on success. Guest progress carries over to a new account. */
   signIn: (mode: 'signup' | 'signin', email: string, password: string, name?: string) => Promise<string | null>;
+  /** Emails a reset link. Resolves to an error message, or null (also when the email has no account). */
+  requestReset: (email: string) => Promise<string | null>;
+  /** Sets a new password from an emailed link and signs in. Resolves to an error message, or null. */
+  resetPassword: (token: string, password: string) => Promise<string | null>;
   signOut: () => void;
   createAccount: (p: PlatformId, scenarioId: string, name?: string) => void;
   resetAccount: (p: PlatformId) => void;
@@ -128,6 +134,19 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setAccounts((all) => (all[p] ? { ...all, [p]: fn(all[p]!) } : all));
   }, []);
 
+  // Signed in (by password, sign-up or a reset link): keep the token and show this account's saved progress.
+  const applyAuth = (r: { token: string; user: { email: string; name: string | null }; progress: { state: Accounts; updatedAt: string } | null }, typedName?: string) => {
+    setToken(r.token);
+    setProfile({ email: r.user.email, name: r.user.name ?? (typedName?.trim() || undefined) });
+    if (r.progress) {
+      // Their saved progress replaces what this browser had.
+      lastSent.current = JSON.stringify(r.progress.state);
+      lsSet(SYNCED_KEY, r.progress.updatedAt);
+      setAccounts(r.progress.state);
+    }
+    setSync('saved');
+  };
+
   const store = useMemo<Store>(() => ({
     accounts,
     profile,
@@ -139,19 +158,28 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         const r = mode === 'signup'
           ? await apiSignUp(address, password, name?.trim() || undefined, accounts)
           : await apiSignIn(address, password);
-        setToken(r.token);
-        setProfile({ email: r.user.email, name: r.user.name ?? (name?.trim() || undefined) });
-        if (r.progress) {
-          // Their saved progress replaces what this browser had.
-          lastSent.current = JSON.stringify(r.progress.state);
-          lsSet(SYNCED_KEY, r.progress.updatedAt);
-          setAccounts(r.progress.state);
-        }
-        setSync('saved');
+        applyAuth(r, name);
         track(mode);
         return null;
       } catch (e) {
-        return !(e instanceof Error) || e instanceof TypeError ? 'Can’t reach the server right now. Try again in a moment.' : e.message;
+        return friendly(e);
+      }
+    },
+    requestReset: async (email) => {
+      try {
+        await apiForgot(email.trim().toLowerCase());
+        return null;
+      } catch (e) {
+        return friendly(e);
+      }
+    },
+    resetPassword: async (token, password) => {
+      try {
+        applyAuth(await apiReset(token, password));
+        track('password_reset');
+        return null;
+      } catch (e) {
+        return friendly(e);
       }
     },
     signOut: () => {

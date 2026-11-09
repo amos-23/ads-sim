@@ -335,6 +335,7 @@ tr:hover .row-actions { visibility: visible; }
 .hero-note { font-size: 15px !important; color: #4f46e5 !important; font-weight: 600; margin-top: 12px !important; }
 .auth-body { padding: 16px 18px 4px; display: flex; flex-direction: column; gap: 10px; }
 .auth-label { display: flex; flex-direction: column; gap: 6px; font-weight: 600; font-size: 13.5px; }
+.auth-label-row { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
 .auth-modal .btn.primary { background: #4f46e5; border-color: #4f46e5; }
 .auth-modal .link { color: #4f46e5; }
 .brief-user { margin-bottom: 10px; padding: 8px 10px; background: #f3f4f6; border-radius: 8px; }

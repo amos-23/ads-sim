@@ -37,6 +37,14 @@ export const apiSignIn = (email: string, password: string) =>
 export const apiSignUp = (email: string, password: string, name: string | undefined, state: Accounts) =>
   call('/api/ads/signup', { method: 'POST', body: JSON.stringify({ email, password, name, state }) }) as Promise<AuthResult>;
 
+/** Emails a reset link if the email has an account. The answer is the same either way. */
+export const apiForgot = (email: string) =>
+  call('/api/ads/forgot', { method: 'POST', body: JSON.stringify({ email }) }) as Promise<{ ok: true }>;
+
+/** Sets a new password with the token from the emailed link, signs in and returns the saved progress. */
+export const apiReset = (token: string, password: string) =>
+  call('/api/ads/reset', { method: 'POST', body: JSON.stringify({ token, password }) }) as Promise<AuthResult>;
+
 export const apiLoad = (token: string) => call('/api/ads/progress', { token }) as Promise<{ user: ServerUser; progress: Progress | null }>;
 
 export const apiSave = (token: string, state: Accounts) =>
