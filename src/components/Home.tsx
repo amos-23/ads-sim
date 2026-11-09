@@ -5,12 +5,13 @@ import { scenarioById, SCENARIOS } from '../data/scenarios';
 import { adIds, sumStats } from '../sim/engine';
 import { fmtMoney } from '../sim/metrics';
 import { PlatformMark } from './ui';
-import { AuthModal, type AuthMode } from './AuthModal';
+import { AuthModal, ResetModal, type AuthMode } from './AuthModal';
 import type { PlatformId } from '../types';
 
-export function Home({ open, gate }: { open: (p: PlatformId) => void; gate?: PlatformId }) {
+export function Home({ open, gate, reset }: { open: (p: PlatformId) => void; gate?: PlatformId; reset?: string }) {
   const { accounts, profile, signOut, sync } = useStore();
   const [auth, setAuth] = useState<AuthMode | null>(null);
+
   return (
     <div className="home">
       <header className="home-nav">
@@ -33,7 +34,9 @@ export function Home({ open, gate }: { open: (p: PlatformId) => void; gate?: Pla
           </>
         )}
       </header>
-      {auth && !gate && <AuthModal key={auth} mode={auth} onClose={() => setAuth(null)} />}
+      {/* #/reset/<token>: the link from the reset email. The token leaves the address bar once it's used or closed. */}
+      {reset && <ResetModal token={reset} onDone={() => window.location.replace('#/')} onClose={() => window.location.replace('#/')} onNewLink={() => { window.location.replace('#/'); setAuth('forgot'); }} />}
+      {auth && !gate && !reset && !profile && <AuthModal key={auth} mode={auth} onClose={() => setAuth(null)} />}
       {/* `gate`: a platform was opened without an account. Sign up (or sign in) first; "Not now" goes back home. */}
       {gate && !profile && <AuthModal key={`gate-${gate}`} mode="signup" required platformName={PLATFORMS[gate].name} onClose={() => { window.location.hash = '/'; }} onSignedIn={() => { /* signed in: the app now opens the platform */ }} />}
       <section className="hero">
