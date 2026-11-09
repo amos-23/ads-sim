@@ -4,7 +4,11 @@ import { Modal } from './ui';
 
 export type AuthMode = 'signup' | 'signin';
 
-export function AuthModal({ mode: initial, onClose }: { mode: AuthMode; onClose: () => void }) {
+/**
+ * Sign up or sign in. With `required` (opening a platform without an account), it explains that an account is
+ * needed and "Not now" leaves without playing. `onSignedIn` runs after success (default: the same as closing).
+ */
+export function AuthModal({ mode: initial, onClose, onSignedIn, required = false, platformName }: { mode: AuthMode; onClose: () => void; onSignedIn?: () => void; required?: boolean; platformName?: string }) {
   const store = useStore();
   const [mode, setMode] = useState<AuthMode>(initial);
   const [email, setEmail] = useState('');
@@ -26,7 +30,7 @@ export function AuthModal({ mode: initial, onClose }: { mode: AuthMode; onClose:
     const problem = await store.signIn(mode, email, password, name);
     setBusy(false);
     if (problem) setError(problem);
-    else onClose();
+    else (onSignedIn ?? onClose)();
   };
 
   const switchMode = () => { setMode(signup ? 'signin' : 'signup'); setError(null); setTouched(false); };
@@ -37,8 +41,8 @@ export function AuthModal({ mode: initial, onClose }: { mode: AuthMode; onClose:
         <header className="modal-h"><h2>{signup ? 'Sign up' : 'Sign in'}</h2><button type="button" className="icon-btn" onClick={onClose} aria-label="Close">×</button></header>
         <div className="auth-body">
           <p className="muted">{signup
-            ? 'You don’t need an account to practise. Create one to save your progress and pick it up on any device.'
-            : 'Welcome back. Sign in to load your saved campaigns.'}</p>
+            ? `Create a free account to ${platformName ? `start practising on ${platformName}` : 'start practising'}. Your campaigns are saved so you can pick them up on any device.`
+            : required ? `Sign in to ${platformName ? `open ${platformName}` : 'continue'} and load your saved campaigns.` : 'Welcome back. Sign in to load your saved campaigns.'}</p>
           <label className="auth-label"><span>Email</span>
             <input className={`input ${touched && !validEmail ? 'over' : ''}`} type="email" autoFocus autoComplete="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
           </label>
@@ -60,7 +64,7 @@ export function AuthModal({ mode: initial, onClose }: { mode: AuthMode; onClose:
           </p>
         </div>
         <footer className="modal-f">
-          <button type="button" className="link" onClick={onClose}>Not now — continue as guest</button>
+          <button type="button" className="link" onClick={onClose}>{required ? 'Not now' : 'Cancel'}</button>
           <div className="spacer" />
           <button type="submit" className="btn primary" disabled={busy}>{busy ? 'One moment…' : signup ? 'Sign up' : 'Sign in'}</button>
         </footer>

@@ -8,7 +8,7 @@ import { PlatformMark } from './ui';
 import { AuthModal, type AuthMode } from './AuthModal';
 import type { PlatformId } from '../types';
 
-export function Home({ open }: { open: (p: PlatformId) => void }) {
+export function Home({ open, gate }: { open: (p: PlatformId) => void; gate?: PlatformId }) {
   const { accounts, profile, signOut, sync } = useStore();
   const [auth, setAuth] = useState<AuthMode | null>(null);
   return (
@@ -33,12 +33,14 @@ export function Home({ open }: { open: (p: PlatformId) => void }) {
           </>
         )}
       </header>
-      {auth && <AuthModal key={auth} mode={auth} onClose={() => setAuth(null)} />}
+      {auth && !gate && <AuthModal key={auth} mode={auth} onClose={() => setAuth(null)} />}
+      {/* `gate`: a platform was opened without an account. Sign up (or sign in) first; "Not now" goes back home. */}
+      {gate && !profile && <AuthModal key={`gate-${gate}`} mode="signup" required platformName={PLATFORMS[gate].name} onClose={() => { window.location.hash = '/'; }} onSignedIn={() => { /* signed in: the app now opens the platform */ }} />}
       <section className="hero">
         <div className="hero-pill">Ad-buying flight simulator</div>
         <h1>Practice running ads<br />without spending a cent.</h1>
         <p>Build real campaigns in faithful replicas of the ad platforms marketers use every day. Set budgets, target audiences, write creative, then fast-forward time and see how your results play out.</p>
-        <p className="hero-note">No sign-up needed — just pick a platform below and start.</p>
+        <p className="hero-note">Free. Create an account, pick a platform below and start.</p>
       </section>
       <section className="platform-pick">
         <h2>Choose a platform to start</h2>
@@ -70,7 +72,7 @@ export function Home({ open }: { open: (p: PlatformId) => void }) {
           <div><span>4</span><b>Optimise with a coach</b><p>Get feedback like a senior media buyer would give: what’s broken, why your CPA is high, and what to test next.</p></div>
         </div>
       </section>
-      <footer className="home-foot">AdsSim is an independent educational simulator. It is not affiliated with, endorsed by, or connected to Meta, TikTok, Google, X or OpenAI. All numbers are simulated. Progress is saved in your browser.</footer>
+      <footer className="home-foot">AdsSim is an independent educational simulator. It is not affiliated with, endorsed by, or connected to Meta, TikTok, Google, X or OpenAI. All numbers are simulated. Progress is saved to your account.</footer>
     </div>
   );
 }
