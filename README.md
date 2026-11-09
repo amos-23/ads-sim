@@ -10,9 +10,7 @@ AdsSim is an ad-buying "flight simulator". You pick an ad platform and build cam
 | **X Ads** | Objectives, ad groups, Autobid / Target cost / Max bid, keyword targeting, promoted post with website card preview |
 | **ChatGPT Ads** | Contextual targeting by conversation topic, restricted topics (health, politics), 18+ only, sponsored card shown under an answer |
 
-**No sign-up or business choice is required.** Picking a platform drops you straight into a free-play account for your own business. Two optional extras:
-
-- **Sign up / Sign in** (home page, top right). Email and password (8+ characters). It saves your progress to the AdsSim backend and carries over anything you built as a guest. Sign in on any device to get it back. There is no email verification and no password reset yet. Without an account, everything stays in this browser's `localStorage`.
+**An account is required.** Picking a platform (or opening a link to one) asks you to sign up, or sign in, first: email and password (8+ characters), free. Then you go straight into a free-play account for your own business, with your progress saved to the AdsSim backend so you can pick it up on any device. Anything built as a guest in an older version carries over when you sign up. There is no email verification and no password reset yet. One optional extra:
 
 **Usage analytics.** AdsSim sends anonymous events (platform started, campaign saved, days advanced, sign-ups) to the backend. No cookies, no email, and nothing is sent when the browser has Do Not Track on.
 - **Guided sample businesses** (Brief panel → *Try a guided sample business*). Four preset briefs with their own audience, economics and target cost per result.
@@ -55,7 +53,7 @@ npm run build     # type-check and build a static site into dist/
 npm test          # engine tests (vitest)
 ```
 
-The build is fully static (`base: './'`), so `dist/` can be hosted on GitHub Pages, Netlify, Vercel or any file host. Guest progress is saved in the browser's `localStorage`; accounts also save to the backend. To start over, use **Brief → Reset account** in the simulation dock.
+The build is fully static (`base: './'`), so `dist/` can be hosted on GitHub Pages, Netlify, Vercel or any file host. Progress is saved to your account on the backend (and cached in the browser's `localStorage`). To start over, use **Brief → Reset account** in the simulation dock.
 
 ## Project layout
 

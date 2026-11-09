@@ -27,8 +27,14 @@ export const navigate = (path: string) => { window.location.hash = path; };
 
 export default function App() {
   const hash = useHash();
+  const { profile } = useStore();
   const [, platform, view = 'manager', arg] = hash.split('/');
-  if (platform && platform in PLATFORMS) return <PlatformApp key={platform} platform={platform as PlatformId} view={view} arg={arg} />;
+  if (platform && platform in PLATFORMS) {
+    // An account is needed to use AdsSim: without one, the home page asks you to sign up (or sign in) first,
+    // then opens the platform you picked.
+    if (!profile) return <Home open={(p) => navigate(`/${p}`)} gate={platform as PlatformId} />;
+    return <PlatformApp key={platform} platform={platform as PlatformId} view={view} arg={arg} />;
+  }
   return <Home open={(p) => navigate(`/${p}`)} />;
 }
 
