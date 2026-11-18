@@ -56,3 +56,29 @@ export function track(name: string, platform?: PlatformId, props?: Record<string
     }).catch(() => undefined);
   } catch { /* analytics must never break the app */ }
 }
+
+// ─── Support chat (served by the same backend as sign-in; answered from its admin) ─────────────────────────
+
+export interface ChatMessage { id: number; sender: 'user' | 'admin'; body: string; at: string }
+
+const SUPPORT_TOKEN_KEY = 'ads-sim:support-token';
+
+/** A random id for this browser's support chat: the server stores only its hash. */
+export function supportToken(create = false): string | null {
+  try {
+    let t = localStorage.getItem(SUPPORT_TOKEN_KEY);
+    if (!t && create) {
+      const a = new Uint8Array(24);
+      crypto.getRandomValues(a);
+      t = btoa(String.fromCharCode(...a)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+      localStorage.setItem(SUPPORT_TOKEN_KEY, t);
+    }
+    return t;
+  } catch { return null; }
+}
+
+export const apiSupportSend = (token: string, body: string, who: { name?: string; email?: string }, page: string) =>
+  call('/api/support/message', { method: 'POST', body: JSON.stringify({ project: 'ads', token, body, name: who.name, email: who.email, page }) }) as Promise<{ ok: true; message: ChatMessage }>;
+
+export const apiSupportThread = (token: string, after: number) =>
+  call('/api/support/thread', { method: 'POST', body: JSON.stringify({ project: 'ads', token, after }) }) as Promise<{ messages: ChatMessage[]; status: 'open' | 'closed' }>;

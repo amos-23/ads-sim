@@ -11,6 +11,7 @@ import { Manager, Overview, type Focus } from './components/Manager';
 import { Editor } from './components/editor/Editor';
 import { ObjectivePicker } from './components/ObjectivePicker';
 import { Billing, SimBar } from './components/SimBar';
+import { HelpButton } from './components/Help';
 import type { Campaign } from './types';
 
 function useHash() {
@@ -57,7 +58,12 @@ function PlatformApp({ platform, view, arg }: { platform: PlatformId; view: stri
   }, [needsAccount, platform, store]);
 
   if (view === 'pick') {
-    return <ScenarioPicker platform={platform} replacing={!!account} onBack={() => navigate(account ? `/${platform}` : '/')} onStart={(id) => { store.createAccount(platform, id); navigate(`/${platform}`); }} />;
+    return (
+      <>
+        <ScenarioPicker platform={platform} replacing={!!account} onBack={() => navigate(account ? `/${platform}` : '/')} onStart={(id) => { store.createAccount(platform, id); navigate(`/${platform}`); }} />
+        <HelpButton variant="floating" context={`${p.name} · sample business`} />
+      </>
+    );
   }
   if (!account) return null;
 

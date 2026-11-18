@@ -6,6 +6,7 @@ import { adIds, sumStats } from '../sim/engine';
 import { fmtMoney } from '../sim/metrics';
 import { PlatformMark } from './ui';
 import { AuthModal, type AuthMode } from './AuthModal';
+import { HelpButton } from './Help';
 import type { PlatformId } from '../types';
 
 export function Home({ open, gate }: { open: (p: PlatformId) => void; gate?: PlatformId }) {
@@ -13,6 +14,7 @@ export function Home({ open, gate }: { open: (p: PlatformId) => void; gate?: Pla
   const [auth, setAuth] = useState<AuthMode | null>(null);
   return (
     <div className="home">
+      <HelpButton variant="floating" context="Home" />
       <header className="home-nav">
         <div className="home-logo"><span>📈</span>AdsSim</div>
         <div className="spacer" />

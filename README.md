@@ -17,6 +17,10 @@ AdsSim is an ad-buying "flight simulator". You pick an ad platform and build cam
 
 > AdsSim is an independent educational tool. It is not affiliated with Meta, TikTok, Google, X or OpenAI. All numbers are simulated.
 
+## Help and support
+
+A **Help** button (in the simulation bar on every platform, and floating on the home and sign-in screens) opens a panel with **Chat**, **WhatsApp** and **Email**. Chat messages go to the shared backend (`/api/support/*`) and arrive in the admin's **Support** inbox, together with where the person was ("Google Ads · Day 7") and their email if they're signed in. The backend setup (notifications, limits) is described in the `moonshot` repo README under *Support chat*. The contact details are the constants at the top of `src/components/Help.tsx`.
+
 ## How the simulation works
 
 The `src/sim/` folder holds the engine. It is deterministic: the same set-up on the same day always gives the same numbers.

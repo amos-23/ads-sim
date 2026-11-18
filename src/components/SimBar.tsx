@@ -6,6 +6,7 @@ import { scenarioById } from '../data/scenarios';
 import { PLATFORMS } from '../platforms/config';
 import { adIds, sumStats } from '../sim/engine';
 import { dateFor, fmtDate, fmtInt, fmtMoney } from '../sim/metrics';
+import { HelpButton } from './Help';
 
 export function SimBar({ account, onExit }: { account: Account; onExit: () => void }) {
   const store = useStore();
@@ -36,6 +37,7 @@ export function SimBar({ account, onExit }: { account: Account; onExit: () => vo
         <button className={`sim-btn ${panel === 'coach' ? 'on' : ''}`} onClick={() => setPanel(panel === 'coach' ? '' : 'coach')}>🎓 Coach{problems > 0 && <span className="sim-badge">{problems}</span>}</button>
         <button className={`sim-btn ${panel === 'brief' ? 'on' : ''}`} onClick={() => setPanel(panel === 'brief' ? '' : 'brief')}>📋 Brief</button>
         <button className={`sim-btn ${panel === 'log' ? 'on' : ''}`} onClick={() => setPanel(panel === 'log' ? '' : 'log')}>🔔 Activity</button>
+        <HelpButton variant="sim" context={`${PLATFORMS[account.platform].name} · Day ${account.day}`} />
       </div>
       {panel && (
         <aside className="sim-panel">
