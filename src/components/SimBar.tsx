@@ -114,9 +114,10 @@ export function Billing({ account }: { account: Account }) {
   return (
     <div className={`billing bill-${p.id}`}>
       <h1>{p.id === 'meta' ? 'Billing & payments' : p.id === 'google' ? 'Billing summary' : 'Billing'}</h1>
+      <div className="bill-sim">🧪 <b>Practice account.</b> No real money, card or payment details are needed or collected here. Everything on this page is simulated.</div>
       <div className="bill-cards">
-        <div className="bill-card"><small>Prepaid balance</small><b>{fmtMoney(account.balance)}</b><div className="row gap-s">{[500, 1000, 5000].map((n) => <button key={n} className="btn" onClick={() => store.update(account.platform, (a) => ({ ...a, balance: +(a.balance + n).toFixed(2) }))}>+ {fmtMoney(n, 0)}</button>)}</div><p className="muted small">Simulated funds — no real money is used.</p></div>
-        <div className="bill-card"><small>Total spent</small><b>{fmtMoney(sumStats(account, ids).spend)}</b><p className="muted small">Payment method: Practice card •••• 4242</p></div>
+        <div className="bill-card"><small>Prepaid balance</small><b>{fmtMoney(account.balance)}</b><div className="row gap-s">{[500, 1000, 5000].map((n) => <button key={n} className="btn" onClick={() => store.update(account.platform, (a) => ({ ...a, balance: +(a.balance + n).toFixed(2) }))}>+ {fmtMoney(n, 0)}</button>)}</div><p className="muted small">Simulated funds only. Use these buttons to top up your practice balance for free.</p></div>
+        <div className="bill-card"><small>Total spent</small><b>{fmtMoney(sumStats(account, ids).spend)}</b><p className="muted small">Payment method: simulated practice card (no real card needed)</p></div>
       </div>
       <h3>Transactions</h3>
       <table className="grid-table">

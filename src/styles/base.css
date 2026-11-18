@@ -339,3 +339,4 @@ tr:hover .row-actions { visibility: visible; }
 .auth-modal .link { color: #4f46e5; }
 .brief-user { margin-bottom: 10px; padding: 8px 10px; background: #f3f4f6; border-radius: 8px; }
 .brief .btn { margin-right: 6px; }
+.bill-sim { background: #eef2ff; border: 1px solid #c7d2fe; color: #312e81; border-radius: var(--radius); padding: 10px 14px; margin-bottom: 14px; font-size: 13.5px; }

@@ -118,7 +118,7 @@ function CampaignBudget(ctx: EdCtx) {
   return (
     <Card title={p.id === 'google' ? 'Budget' : 'Campaign budget'} subtitle={p.id === 'google' ? 'Set your average daily budget for this campaign' : undefined}>
       {BudgetFields(ctx, p.id !== 'google')}
-      {p.id === 'google' && <p className="muted small">For the month, you won’t pay more than your daily budget times the average number of days in a month ({fmtMoney(draft.budget * 30.4)}). Some days you might spend more or less than your daily budget.</p>}
+      {p.id === 'google' && <p className="muted small">For the month, your simulated spend won’t exceed your daily budget times the average number of days in a month ({fmtMoney(draft.budget * 30.4)}). No real payment is involved. Some days you might spend more or less than your daily budget.</p>}
       {!s.open && <p className="muted small">Brief suggests about {fmtMoney(s.suggestedDailyBudget, 0)}/day for {s.brand}.</p>}
     </Card>
   );

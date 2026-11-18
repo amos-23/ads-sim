@@ -316,7 +316,7 @@ export function advanceDay(input: Account): Account {
       });
     }
     acc.balance = +(acc.balance - daySpend).toFixed(2);
-    if (acc.balance <= 0) notices.push(note(day, 'error', 'Your prepaid balance has run out. Ads stopped delivering — add funds in Billing.'));
+    if (acc.balance <= 0) notices.push(note(day, 'error', 'Your practice balance has run out. Ads stopped delivering — top it up for free in Billing (simulated funds, no real payment).'));
     else if (acc.balance < daySpend * 3) notices.push(note(day, 'warn', 'Your balance is running low (less than 3 days of spend left).'));
   } else if (acc.campaigns.some((c) => c.status === 'active')) {
     notices.push(note(day, 'error', 'Ads aren’t delivering: no remaining balance.'));
